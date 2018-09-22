@@ -27,23 +27,28 @@ class BooksApp extends React.Component {
   }
 
   moveBook = (currBook, shelf) => {
-    console.log(currBook, shelf);
+    //update the book list
     BooksAPI.update(currBook, shelf).then(() => {
-      const newBooks = this.state.books.map(book => {
+      this.state.books.map(book => {
         //change the shelf if the book is moved
         book.id === currBook.id && (book.shelf = shelf);
 
         return book;
-      });
+      })
 
-      this.setState(() => ({ books: newBooks }));
+
+      BooksAPI.getAll().then(books => this.setState(() => ({ books: books })));
+
+
+
+
     });
   };
 
   render() {
     return (
       <div className="app">
-        <Route path="/search" render={() => <SearchBar />} />
+        <Route path="/search" render={() => <SearchBar books={this.state.books} moveBook={this.moveBook} />} />
         <Route exact path="/" render={() => <BookShelf books={this.state.books} shelves={this.state.shelves} moveBook={this.moveBook} />} />
       </div>
     );

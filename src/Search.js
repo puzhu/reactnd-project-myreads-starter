@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import * as BooksAPI from "./BooksAPI";
+import ShelfChange from "./ShelfChange.js";
+import { debounced } from "./throttleDebounce";
+
 
 class SearchBar extends Component {
   state = {
@@ -8,24 +11,22 @@ class SearchBar extends Component {
     searchBooks: []
   }
   onChangeInput(searchTerm) {
+    this.setState(() => ({ query: searchTerm }))
     if (searchTerm.length < 1) {
       this.setState(() => ({
-        query: "",
         searchBooks: []
       }))
     } else {
-      BooksAPI.search(searchTerm).then(books => this.setState(() => {
+
+      debounced(400, BooksAPI.search(searchTerm).then(books => this.setState(() => {
         return ({
-          query: searchTerm,
           searchBooks: books
         })
-      }))
+      })))
+
     }
-
-
   }
   render() {
-    console.log(this.state)
     return (
       <div className="search-books">
         <div className="search-books-bar">
@@ -42,9 +43,18 @@ class SearchBar extends Component {
             <input type="text" placeholder="Search by title or author" value={this.state.query} onChange={(event) => this.onChangeInput(event.target.value)} />
           </div>
         </div>
+
         <div className="search-books-results">
           <ol className="books-grid">
             {this.state.searchBooks.length > 0 && (this.state.searchBooks.map(book => {
+
+              const thumbnail = book.imageLinks ? book.imageLinks.smallThumbnail : "";
+              const title = book.title ? book.title : "";
+              const authors = book.authors ? book.authors.join(", ") : "";
+              //find if this book is already in shelf
+              const bookShelf = this.props.books.filter(shelfBook => book.id === shelfBook.id)
+              const shelf = bookShelf.length > 0 ? bookShelf[0].shelf : "none"
+
               return (
                 <li key={book.id}>
                   <div className="book">
@@ -54,12 +64,13 @@ class SearchBar extends Component {
                         style={{
                           width: 128,
                           height: 193,
-                          backgroundImage: `url(${book.imageLinks.smallThumbnail})`
+                          backgroundImage: `url(${thumbnail})`
                         }}
                       />
+                      <ShelfChange moveBook={this.props.moveBook} book={book} shelf={shelf} />
                     </div>
-                    <div className="book-title">{book.title}</div>
-                    <div className="book-authors">{book.authors[0]}</div>
+                    <div className="book-title">{title}</div>
+                    <div className="book-authors">{authors}</div>
                   </div>
                 </li>
               );

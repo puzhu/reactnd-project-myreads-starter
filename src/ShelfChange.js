@@ -3,6 +3,7 @@ import React, { Component } from "react";
 class ShelfChange extends Component {
   handleSelectEvent = event => {
     const shelf = event.target.value;
+
     this.props.moveBook(this.props.book, shelf);
   };
 
